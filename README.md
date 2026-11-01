@@ -81,9 +81,6 @@ dsh plugin --profile desktop add ./dsh-cookie-guard
 没装 git 也没关系：在仓库页点 **Code ▾ → Download ZIP**，解压后把解压出来的目录路径交给同一条命令（`dsh plugin --profile desktop add <解压出来的目录>`），效果一样。
 
 桌面端的 `desktop` profile 由 Electron 应用独占管理，命令行写不进去时用**应用内 设置 → 插件**安装。装完完全退出应用再打开。
-```
-
-桌面端的 `desktop` profile 由 Electron 应用独占管理，命令行写不进去时用**应用内 设置 → 插件**安装。装完完全退出应用再打开。
 
 ### 4. 手动跑一次（可选）
 
