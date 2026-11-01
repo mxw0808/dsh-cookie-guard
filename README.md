@@ -76,6 +76,8 @@ schtasks /Create /TN "DSH Cookie Weekly Check" /SC WEEKLY /D MON /ST 12:00 `
 ```powershell
 git clone https://github.com/mxw0808/dsh-cookie-guard.git
 dsh plugin --profile desktop add ./dsh-cookie-guard
+
+没装 git 也没关系：在仓库页点 **Code ▾ → Download ZIP**，解压后把解压出来的目录路径交给同一条命令（`dsh plugin --profile desktop add <解压出来的目录>`），效果一样。
 ```
 
 桌面端的 `desktop` profile 由 Electron 应用独占管理，命令行写不进去时用**应用内 设置 → 插件**安装。装完完全退出应用再打开。
