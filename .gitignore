@@ -1,0 +1,15 @@
+# logs written by the scripts at runtime
+*.log
+cookie-report.txt
+
+# runtime marker dropped by lib/index.js
+last-load.json
+
+# backups created by dsh_cookie_guard.py
+*.bak
+*.bak-*
+
+node_modules/
+.tmp/
+.DS_Store
+Thumbs.db
