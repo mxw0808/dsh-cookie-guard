@@ -1,0 +1,45 @@
+{
+  "name": "dsh-cookie-guard",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "每周一自动体检 DSH 登录 cookie：超过 40 条就备份并清理，防止请求头被撑爆导致启动白屏；插件开关就是计划任务开关。",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": "mxw0808",
+  "homepage": "https://github.com/mxw0808/dsh-cookie-guard#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mxw0808/dsh-cookie-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mxw0808/dsh-cookie-guard/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "windows",
+    "scheduled-task",
+    "cookie",
+    "maintenance"
+  ],
+  "os": [
+    "win32"
+  ]
+}

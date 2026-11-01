@@ -1,0 +1,6 @@
+# Mounts dsh-cookie-guard as a host plugin.
+# Enabling the plugin in the DSH plugin list enables the Windows scheduled task
+# "DSH Cookie Weekly Check"; disabling the plugin disables the task again.
+- insert:
+    - id: cookie-guard
+      name: dsh-cookie-guard
