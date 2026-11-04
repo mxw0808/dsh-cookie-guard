@@ -7,7 +7,9 @@ param([int]$Attempts = 36)
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $guard = Join-Path $here 'dsh_cookie_guard.py'
-$log = Join-Path $here 'cookie-weekly.log'
+$logDir = Join-Path $env:LOCALAPPDATA 'dsh-cookie-guard'
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+$log = Join-Path $logDir 'cookie-weekly.log'
 
 $py = Join-Path $env:USERPROFILE '.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe'
 if (-not (Test-Path $py)) { $py = 'python' }
