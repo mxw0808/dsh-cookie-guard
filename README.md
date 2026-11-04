@@ -44,7 +44,7 @@ dsh-auth-* 条数     : 51
 
 | 文件 | 作用 |
 |---|---|
-| `lib/index.js` + `cordis.patch.yml` | 插件本体。加载时 `schtasks /Change /TN "DSH Cookie Weekly Check" /ENABLE`，卸载时 `/DISABLE`，并往 `last-load.json` 写一条「宿主确实加载了」的证据 |
+| `lib/index.js` + `cordis.patch.yml` | 插件本体。加载时用 `schtasks /Create ... /F` **自己注册**计划任务（直接指向包内 `scripts\dsh_cookie_weekly.ps1`），卸载时 `schtasks /Delete` 一并删掉，并往 `last-load.json` 写一条「宿主确实做了什么的」证据 |
 | `scripts/dsh_cookie_guard.py` | 真正的干活脚本：把 `Network\Cookies` 复制到临时目录后用 sqlite 统计、`--block N` 超阈值时先备份再删 `dsh-auth-*` |
 | `scripts/dsh_cookie_weekly.ps1` | 计划任务调它：先看插件在不在启用列表里；在的话每 5 分钟探一次 DSH 是否关闭（最多 3 小时），关了就调 guard |
 
@@ -52,26 +52,7 @@ dsh-auth-* 条数     : 51
 
 ## 安装
 
-### 1. 把脚本放到固定位置
-
-```
-mkdir %USERPROFILE%\.dsh\tools
-copy scripts\*.py  %USERPROFILE%\.dsh\tools\
-copy scripts\*.ps1 %USERPROFILE%\.dsh\tools\
-```
-
-### 2. 注册计划任务
-
-在**普通 PowerShell**（不需要管理员）里执行：
-
-```powershell
-$ps = "$env:USERPROFILE\.dsh\tools\dsh_cookie_weekly.ps1"
-schtasks /Create /TN "DSH Cookie Weekly Check" /SC WEEKLY /D MON /ST 12:00 `
-  /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ps`"" `
-  /F
-```
-
-### 3. 装插件
+一条命令，插件自己装好一切——计划任务由它注册，脚本从包内目录直接运行，**不需要复制任何文件到 `%USERPROFILE%`，也不需要手工 `schtasks`**。
 
 ```powershell
 git clone https://github.com/mxw0808/dsh-cookie-guard.git
@@ -82,27 +63,37 @@ dsh plugin --profile desktop add ./dsh-cookie-guard
 
 桌面端的 `desktop` profile 由 Electron 应用独占管理，命令行写不进去时用**应用内 设置 → 插件**安装。装完完全退出应用再打开。
 
-### 4. 手动跑一次（可选）
+重启后插件加载时做的三件事：
+
+1. `schtasks /Create /TN "DSH Cookie Weekly Check" /SC WEEKLY /D MON /ST 12:00 /TR "powershell.exe … -File \"<插件目录>\scripts\dsh_cookie_weekly.ps1\""`（已存在则 `/F` 覆盖）
+2. 把结果写进插件目录下的 `last-load.json`（`mode` 会是 `created` / `enabled-existing` / `failed`）
+3. 在应用里**停用或卸载**这个插件时，`schtasks /Delete` 把任务一起删掉
+
+任务以**当前用户**身份注册，不需要管理员权限。若你以前手工建过同名任务（管理员身份），先在「任务计划程序」里删掉它，否则插件只能复用它、改不了它指向的路径。
+
+### 手动跑一次（可选）
 
 ```
-python %USERPROFILE%\.dsh\tools\dsh_cookie_guard.py
+python <插件目录>\scripts\dsh_cookie_guard.py
 ```
 
 不带参数只体检、不动手；`--block 40` 是「超过 40 条就清理」。
 
 ## 验证是否生效
 
-`scripts` 会往同目录写两个日志：
+两个日志都在固定位置：
 
-- `cookie-weekly.log`：周任务的执行时间线
-- `cookie-report.txt`：每次体检的数据（时间戳 + 条数 + 占用字节）
+- `%LOCALAPPDATA%\dsh-cookie-guard\cookie-weekly.log`：周任务的执行时间线
+- `<插件目录>\scripts\cookie-report.txt`：每次体检的数据（时间戳 + 条数 + 占用字节）
+- `<插件目录>\lib\last-load.json`：宿主加载插件时到底做了什么（`mode: created` 表示任务由插件自己建成）
 
 `nothing to do` = 插件处于停用状态；`attempt 1: DSH is closed, running guard` = 正在干活。
 
 ## 已知限制
 
-- 只在 **Windows** 上工作（依赖 `schtasks`、`%APPDATA%` 下的 Chromium 库）。
+- 只在 **Windows** 上工作（依赖 `schtasks`、`%APPDATA%` 下的 Chromium 库）；非 Windows 上插件只写一条 `skipped` 就退出。
 - 计划任务名**固定**为 `DSH Cookie Weekly Check`，改任务名要同时改 `lib/index.js` 里的 `TASK_NAME`。
+- 若同名任务已由**管理员**身份创建，插件无权覆盖或删除它（会退回 `/Change /ENABLE` 并在 `last-load.json` 里记 `enabled-existing`）；先在任务计划程序里删掉再启用插件。
 - profile 名**固定**为 `desktop`（`lib/index.js` 与 ps1 里都写死了），用 `web` profile 需要改两处。
 - guard 需要 **Python 3.8+**；ps1 会优先用 DSH 自带的 python，找不到才退回系统 `python`。
 - 删除前会先备份整库到 `Cookies.bak-<时间戳>`，这些东西可以定期手工清掉。
